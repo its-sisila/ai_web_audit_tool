@@ -65,9 +65,16 @@ RESPONSE_SCHEMA = {
     "required": ["insights", "recommendations"],
 }
 
-# Model configuration constants from the build guide
-MODEL_NAME = "gemini-3.5-flash"
-MAX_OUTPUT_TOKENS = 1500
+# Model fallback chain — tried in order; first available model wins.
+# 503/UNAVAILABLE errors trigger the next model in the list.
+# Only the successful call consumes free tier quota.
+MODEL_CHAIN = [
+    "gemini-3.5-flash",       # Primary — specified in the build guide
+    "gemini-2.5-flash",       # Fallback 1 — stable, widely available
+    "gemini-2.5-flash-lite",  # Fallback 2 — lighter variant
+    "gemini-3.1-flash-lite",  # Fallback 3 — newer lite model
+]
+MAX_OUTPUT_TOKENS = 8192
 MAX_CLEANED_TEXT_WORDS = 3000
 
 
@@ -108,10 +115,31 @@ def _build_user_prompt(url: str, metrics: dict, cleaned_text: str) -> str:
     )
 
 
+def _call_gemini(client, model_name: str, user_prompt: str) -> str:
+    """
+    Make a single Gemini API call and return the raw response text.
+    Raises on failure so the caller can decide whether to retry.
+    """
+    response = client.models.generate_content(
+        model=model_name,
+        contents=user_prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
+            response_mime_type="application/json",
+            response_schema=RESPONSE_SCHEMA,
+        ),
+    )
+    return response.text
+
+
 def analyze(url: str, metrics: dict, cleaned_text: str) -> dict:
     """
     Main entry point. Sends extracted metrics and cleaned text to Gemini
     for structured AI analysis.
+
+    Tries models in priority order (gemini-3.5-flash → 2.5-flash → lite variants).
+    Falls back to the next model on 503 UNAVAILABLE errors.
 
     Args:
         url: The original URL being audited.
@@ -135,7 +163,7 @@ def analyze(url: str, metrics: dict, cleaned_text: str) -> dict:
         }
 
     Raises:
-        RuntimeError: If the Gemini API call fails.
+        RuntimeError: If all models in the fallback chain fail.
         EnvironmentError: If GEMINI_API_KEY is not set.
     """
     # Load API key from environment — never hardcoded
@@ -149,44 +177,53 @@ def analyze(url: str, metrics: dict, cleaned_text: str) -> dict:
     # Build prompts
     user_prompt = _build_user_prompt(url, metrics, cleaned_text)
 
-    # Gemini config for logging
+    # Initialize the Gemini client
+    client = genai.Client(api_key=api_key)
+
+    # Try each model in the chain until one succeeds
+    raw_output = None
+    used_model = None
+    last_error = None
+
+    for model_name in MODEL_CHAIN:
+        try:
+            raw_output = _call_gemini(client, model_name, user_prompt)
+            used_model = model_name
+            if model_name != MODEL_CHAIN[0]:
+                print(f"[gemini] Succeeded with fallback model: {model_name}")
+            break
+        except Exception as e:
+            last_error = e
+            error_str = str(e)
+            if "503" in error_str or "UNAVAILABLE" in error_str:
+                print(f"[gemini] {model_name} unavailable, trying next...")
+                continue
+            else:
+                # Non-availability error (auth, schema, etc.) — don't retry
+                raise RuntimeError(f"Gemini API call failed: {e}")
+
+    if raw_output is None:
+        raise RuntimeError(
+            f"All models unavailable ({', '.join(MODEL_CHAIN)}). Last error: {last_error}"
+        )
+
+    # Gemini config for logging (reflects the model that actually responded)
     gemini_config = {
-        "model": MODEL_NAME,
+        "model": used_model,
         "max_output_tokens": MAX_OUTPUT_TOKENS,
         "response_mime_type": "application/json",
     }
 
     try:
-        # Initialize the Gemini client
-        client = genai.Client(api_key=api_key)
-
-        # Call the Gemini API with structured output enforcement
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                max_output_tokens=MAX_OUTPUT_TOKENS,
-                response_mime_type="application/json",
-                response_schema=RESPONSE_SCHEMA,
-            ),
-        )
-
-        # Extract raw response text
-        raw_output = response.text
-
-        # Parse the structured JSON response
         ai_result = json.loads(raw_output)
-
-        return {
-            "ai_result": ai_result,
-            "raw_output": raw_output,
-            "system_prompt": SYSTEM_PROMPT,
-            "user_prompt": user_prompt,
-            "gemini_config": gemini_config,
-        }
-
     except json.JSONDecodeError as e:
         raise RuntimeError(f"Failed to parse Gemini response as JSON: {e}")
-    except Exception as e:
-        raise RuntimeError(f"Gemini API call failed: {e}")
+
+    return {
+        "ai_result": ai_result,
+        "raw_output": raw_output,
+        "system_prompt": SYSTEM_PROMPT,
+        "user_prompt": user_prompt,
+        "gemini_config": gemini_config,
+    }
+
