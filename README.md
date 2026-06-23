@@ -40,7 +40,7 @@
           ┌──────────────────┐            ┌────────┴─────────┐
           │   gemini.py      │            │   scraper.py     │
           │                  │            │                  │
-          │  Gemini 3.5 Flash│            │  requests + BS4  │
+          │  Model Fallbacks │            │  requests + BS4  │
           │  Structured JSON │            │  Factual metrics │
           │  response_schema │            │  + cleaned text  │
           └──────────────────┘            └──────────────────┘
@@ -57,11 +57,10 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 
 ## 2. AI Design Decisions
 
-### Why `gemini-3.5-flash`
-- Available on the **free tier** — no billing required for development and evaluation
-- **Fast inference** — sub-second response times for structured output
-- **Sufficient quality** for structured analysis tasks — the schema enforcement means we don't need the reasoning depth of Pro models
-- Supports `response_schema` for **guaranteed JSON output**
+### Model Selection & Fallback Chain
+- **Primary Model:** `gemini-3.5-flash` is used as specified in the brief for fast, free-tier structured output.
+- **Robust Fallback Strategy:** To handle frequent `503 UNAVAILABLE` errors due to high demand, the app implements an automatic fallback chain (`gemini-3.5-flash` → `gemini-2.5-flash` → `gemini-2.5-flash-lite` → `gemini-3.1-flash-lite`). This ensures the app remains reliable without exhausting quotas on failed requests.
+- Supports `response_schema` for **guaranteed JSON output** across the Flash model family.
 
 ### Why `response_schema` (Structured Output)
 - Guarantees the API returns **valid JSON** matching our exact schema — no regex parsing, no "please format as JSON" prompt hacking
@@ -72,7 +71,7 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 ### Why 3000-word truncation
 - **Token budget management** — Gemini 3.5 Flash has a context window, but sending entire pages would waste tokens on boilerplate (nav, footer, legal text)
 - 3000 words captures the **core content** of most marketing pages (hero, features, about sections)
-- Combined with `max_output_tokens: 1500`, keeps the total token usage predictable and fast
+- Combined with `max_output_tokens: 8192`, keeps the total token usage predictable while allowing enough budget for newer "thinking" models (like `gemini-2.5-flash`) to process internal reasoning without truncating the final JSON.
 - Prevents timeout issues on content-heavy pages
 
 ### Grounding Strategy
@@ -87,10 +86,10 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 | Decision | Chosen Approach | Alternative | Why |
 |----------|----------------|-------------|-----|
 | **Scope** | Single page only | Multi-page crawl | Hard constraint from the brief. Also keeps scraping fast and predictable |
-| **Model** | Flash (free, fast) | Pro (deeper reasoning) | Flash is sufficient for structured output tasks; Pro would add latency and cost without meaningful quality gain for this use case |
+| **Model** | Multi-model Fallback Chain | Single Pro model | A fallback chain of Flash/Lite models ensures high availability during traffic spikes, whereas a single Pro model would be a single point of failure and cost more. |
 | **Scraping** | `requests` + `BeautifulSoup` | Headless browser (Playwright, Selenium) | Brief prohibits headless browsers. Trade-off: JS-rendered content (SPAs, React apps) won't be captured |
 | **CTA Detection** | Regex pattern matching | ML-based intent classification | Regex is fast and deterministic; covers 90%+ of standard marketing CTAs. ML would add complexity and a dependency for marginal gain |
-| **Token limit** | 1500 output tokens | Higher limit | Keeps responses concise and focused. Higher limits risk verbose, less actionable output |
+| **Token limit** | 8192 output tokens | 1500 limit | Increased to 8192 to prevent JSON truncation issues when fallback models (like `gemini-2.5-flash`) use internal reasoning tokens that count against the output limit. |
 | **Text truncation** | 3000 words | Full page text | Balances content coverage with token efficiency. Most marketing pages have < 3000 words of meaningful content |
 | **Prompt logging** | Local JSON file | Database | File-based logging is zero-dependency and sufficient for a single-user tool. Database would be overkill |
 
@@ -99,12 +98,38 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 - **Rate limiting** — No retry logic or rate limit handling for either the target URL or the Gemini API
 - **CTA detection** — Regex-based; may miss unconventional CTA phrases or produce false positives on navigation links
 - **Single language** — CTA patterns are English-only
+- **Total model exhaustion** — If all four models in the fallback chain return `503 UNAVAILABLE` simultaneously (e.g., during a region-wide Gemini outage), the app returns a clear error listing every model tried; the user must retry later
 
 ---
 
-## 4. What I Would Improve With More Time
+## 4. Example Output
 
-1. **Retry logic with exponential backoff** — for both HTTP requests and Gemini API calls, handling transient failures gracefully
+**URL audited:** `https://vercel.com`
+
+**Metrics extracted:**
+- Word Count: 555
+- H1: 1, H2: 16, H3: 6
+- CTAs: 12 | Internal Links: 142 | External Links: 17
+- Images: 18 | Missing Alt Text: 16.7%
+- Meta Title: "Agentic Infrastructure"
+- Meta Description: "The autonomous stack for every app and agent."
+
+**Sample AI Insight (SEO Structure):**
+> "The page maintains a proper SEO structure with a single H1 tag.
+> However, 16 H2 tags within a 555-word body suggests a highly
+> segmented structure with minimal content under each heading."
+
+**Sample Recommendation (High Priority):**
+> "Expand the textual content under each of the 16 H2 headings to
+> provide more detailed explanations and value. A low word count of
+> 555 across 16 H2 tags suggests shallow content for many distinct
+> topics."
+
+---
+
+## 5. What I Would Improve With More Time
+
+1. **Retry logic with exponential backoff** — for HTTP scraping requests and API rate limits (we currently handle `503` availability errors via the model fallback chain, but `429` rate limits could use backoff)
 2. **Caching layer** — store scrape results and AI analysis by URL + timestamp to avoid redundant API calls
 3. **Comparison mode** — audit two URLs side-by-side to compare metrics and insights (useful for competitive analysis)
 4. **Historical tracking** — store audit results over time and show trend graphs for repeat audits of the same URL
@@ -117,7 +142,7 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 
 ---
 
-## 5. Setup & Run Instructions
+## 6. Setup & Run Instructions
 
 ### Prerequisites
 - **Python 3.10+** installed
