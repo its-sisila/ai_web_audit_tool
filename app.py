@@ -15,6 +15,7 @@ from flask import Flask, jsonify, render_template, request
 
 from scraper import scrape
 from gemini import analyze
+from grounding import verify_grounding
 from logger import log, get_last_log
 
 
@@ -90,6 +91,11 @@ def audit():
     except Exception as e:
         return jsonify({"error": f"AI analysis failed: {str(e)}"}), 500
 
+    # Step 2b: Verify grounding — check that AI insights cite real metrics
+    grounding_result = verify_grounding(
+        ai_result.get("insights", {}), metrics
+    )
+
     # Step 3: Log the full prompt exchange
     try:
         log(
@@ -99,6 +105,7 @@ def audit():
             gemini_config=gemini_config,
             extracted_metrics=metrics,
             raw_model_response=raw_output,
+            grounding_check=grounding_result,
         )
     except Exception as e:
         # Log failure shouldn't break the response — just warn
@@ -107,8 +114,12 @@ def audit():
     # Step 4: Return structured response
     return jsonify({
         "metrics": metrics,
+        "overall_score": ai_result.get("overall_score", 0),
+        "score_breakdown": ai_result.get("score_breakdown", {}),
+        "competitive_context": ai_result.get("competitive_context", ""),
         "insights": ai_result.get("insights", {}),
         "recommendations": ai_result.get("recommendations", []),
+        "grounding_check": grounding_result,
     })
 
 
