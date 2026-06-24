@@ -94,12 +94,27 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 - Every AI insight is required to **explicitly reference extracted metric values** (e.g., "With only 1 H1 tag and 0 H2 tags...").
 - The system prompt explicitly forbids generic advice.
 - **Post-Processing Validation:** The app includes a standalone `grounding.py` module that acts as a strict verification layer. It scans the AI's output using deterministic string matching to prove that specific metric values were actually cited.
-- Insights that pass get a ✅ in the UI; insights that fail get a ⚠️.
+- Insights that pass render a `Source Data: {Metric}` indicator; insights that fail render a `Warning: No metric cited` indicator.
 - This demonstrates true AI-native thinking: **trust, but verify**. We don't just ask the AI to ground its output; we programmatically prove that it did.
 
 ---
 
-## 3. Trade-offs
+## 3. Code Quality & Testing
+
+### Fully Typed Python
+The entire codebase utilizes strict Python type hinting. Custom `TypedDict` classes define the exact shape of scraper metrics, AI JSON schemas, and internal data structures to ensure robust static analysis and self-documenting code.
+
+### Test Suite
+A comprehensive `pytest` suite is included in the `tests/` directory:
+- **`test_scraper.py`**: Uses mock HTML fixtures to validate factual extraction (happy paths, empty pages, missing meta tags) without making real HTTP calls.
+- **`test_grounding.py`**: Validates the deterministic string-matching verification engine against fully grounded, partially grounded, and ungrounded scenarios.
+- **`test_app.py`**: Integration tests that mock the AI and scraper layers to validate Flask routes, error handling, and JSON payloads.
+
+To run the test suite: `python -m pytest tests/ -v`
+
+---
+
+## 4. Trade-offs
 
 | Decision | Chosen Approach | Alternative | Why |
 |----------|----------------|-------------|-----|
@@ -121,7 +136,7 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 
 ---
 
-## 4. Example Output
+## 5. Example Output
 
 **URL audited:** `https://vercel.com`
 
@@ -136,7 +151,7 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 - Meta Title: "Agentic Infrastructure"
 - Meta Description: "The autonomous stack for every app and agent."
 
-**Sample AI Insight (SEO Structure) ✅:**
+**Sample AI Insight (SEO Structure) [Source Data: h2_count, h3_count, word_count]:**
 > "With 17 H2 tags and 6 H3 tags for only 501 words, the page exceeds the
 > recommended header limit, creating a fragmented hierarchy that confuses
 > search crawlers regarding primary topics."
@@ -149,7 +164,7 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 
 ---
 
-## 5. What I Would Improve With More Time
+## 6. What I Would Improve With More Time
 
 1. **Retry logic with exponential backoff** — for HTTP scraping requests and API rate limits (we currently handle `503` availability errors via the model fallback chain, but `429` rate limits could use backoff)
 2. **Caching layer** — store scrape results and AI analysis by URL + timestamp to avoid redundant API calls
@@ -160,11 +175,7 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 7. **Accessibility audit** — extend beyond alt text to check ARIA labels, color contrast ratios, keyboard navigation
 8. **Screenshot capture** — integrate a headless browser (optional mode) to capture above-the-fold screenshots for visual context
 9. **Multi-language CTA support** — extend regex patterns or use translation for non-English sites
-10. **Test suite** — unit tests for the scraper (mock HTML fixtures), integration tests for the API routes, and contract tests for the Gemini schema
-
----
-
-## 6. Setup & Run Instructions
+## 7. Setup & Run Instructions
 
 ### Prerequisites
 
