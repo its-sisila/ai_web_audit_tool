@@ -16,7 +16,7 @@ from flask import Flask, jsonify, render_template, request
 from scraper import scrape
 from gemini import analyze
 from grounding import verify_grounding
-from logger import log, get_last_log
+from logger import log, get_last_log, get_history
 
 
 # Load environment variables from .env
@@ -130,6 +130,12 @@ def last_log():
     if entry is None:
         return jsonify({"error": "No audit logs found."}), 404
     return jsonify(entry)
+
+
+@app.route("/history", methods=["GET"])
+def history():
+    """Return the last 10 audits with full UI data for quick re-rendering."""
+    return jsonify(get_history(10))
 
 
 if __name__ == "__main__":

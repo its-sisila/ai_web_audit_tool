@@ -92,3 +92,42 @@ def get_last_log() -> dict | None:
         return None
 
     return None
+
+
+def get_history(limit: int = 10) -> list[dict]:
+    """
+    Return the last `limit` prompt log entries.
+    Parses raw_model_response to extract the full AI payload so the frontend
+    can immediately rehydrate the UI without re-scraping.
+    """
+    if not os.path.exists(LOG_FILE):
+        return []
+
+    try:
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            if not content:
+                return []
+            entries = json.loads(content)
+            
+            history = []
+            # Reverse to show newest first
+            for entry in reversed(entries[-limit:]):
+                try:
+                    ai_data = json.loads(entry["raw_model_response"])
+                    history.append({
+                        "timestamp": entry["timestamp"],
+                        "url": entry["url"],
+                        "overall_score": ai_data.get("overall_score"),
+                        "score_breakdown": ai_data.get("score_breakdown"),
+                        "competitive_context": ai_data.get("competitive_context"),
+                        "metrics": entry["extracted_metrics"],
+                        "insights": ai_data.get("insights"),
+                        "recommendations": ai_data.get("recommendations"),
+                        "grounding_check": entry.get("grounding_check"),
+                    })
+                except json.JSONDecodeError:
+                    continue
+            return history
+    except (json.JSONDecodeError, IOError):
+        return []
