@@ -84,6 +84,14 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 - Combined with `max_output_tokens: 8192`, keeps the total token usage predictable while allowing enough budget for newer "thinking" models (like `gemini-2.5-flash`) to process internal reasoning without truncating the final JSON.
 - Prevents timeout issues on content-heavy pages
 
+### Prompt Engineering Pipeline
+
+Our AI integration goes beyond simple wrapper APIs. It follows a robust, multi-stage pipeline:
+
+```text
+Scraped Metrics → Benchmark Context → Structured Prompt → Schema Enforcement → Grounding Verification → Validated Output
+```
+
 ### Benchmark-Informed Prompting
 
 - The AI is provided with **industry benchmarks** in the system prompt (e.g., "marketing pages should have 800-2000 words").
@@ -102,10 +110,13 @@ The scraper and AI modules are **fully independent** — no cross-imports. This 
 ## 3. Code Quality & Testing
 
 ### Fully Typed Python
+
 The entire codebase utilizes strict Python type hinting. Custom `TypedDict` classes define the exact shape of scraper metrics, AI JSON schemas, and internal data structures to ensure robust static analysis and self-documenting code.
 
-### Test Suite
-A comprehensive `pytest` suite is included in the `tests/` directory:
+### Comprehensive Test Suite (31 Passing Tests)
+
+A robust `pytest` suite is included in the `tests/` directory:
+
 - **`test_scraper.py`**: Uses mock HTML fixtures to validate factual extraction (happy paths, empty pages, missing meta tags) without making real HTTP calls.
 - **`test_grounding.py`**: Validates the deterministic string-matching verification engine against fully grounded, partially grounded, and ungrounded scenarios.
 - **`test_app.py`**: Integration tests that mock the AI and scraper layers to validate Flask routes, error handling, and JSON payloads.
@@ -144,6 +155,7 @@ To run the test suite: `python -m pytest tests/ -v`
 *The page relies on a high-density, product-centric navigation structure common in SaaS, but significantly underperforms on SEO-driven content volume and accessibility standards compared to industry leaders.*
 
 **Metrics extracted:**
+
 - Word Count: 501
 - H1: 1, H2: 17, H3: 6
 - CTAs: 12 | Internal Links: 141 | External Links: 17
@@ -175,6 +187,7 @@ To run the test suite: `python -m pytest tests/ -v`
 7. **Accessibility audit** — extend beyond alt text to check ARIA labels, color contrast ratios, keyboard navigation
 8. **Screenshot capture** — integrate a headless browser (optional mode) to capture above-the-fold screenshots for visual context
 9. **Multi-language CTA support** — extend regex patterns or use translation for non-English sites
+
 ## 7. Setup & Run Instructions
 
 ### Prerequisites
