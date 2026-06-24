@@ -22,24 +22,13 @@ def log(
     gemini_config: dict,
     extracted_metrics: dict,
     raw_model_response: str,
+    grounding_check: dict | None = None,
 ) -> None:
     """
     Append a structured log entry to prompt_log.json.
 
-    Each entry follows the exact schema from the build guide Section 6:
-    {
-        "timestamp": "ISO-8601",
-        "url": "...",
-        "system_prompt": "...",
-        "user_prompt": "...",
-        "gemini_config": {
-            "model": "gemini-3.5-flash",
-            "max_output_tokens": 1500,
-            "response_mime_type": "application/json"
-        },
-        "extracted_metrics": { ... },
-        "raw_model_response": "..."
-    }
+    Each entry follows the exact schema from the build guide Section 6,
+    extended with an optional grounding verification result.
 
     Args:
         url: The audited URL.
@@ -48,6 +37,7 @@ def log(
         gemini_config: Dict with model, max_output_tokens, response_mime_type.
         extracted_metrics: The factual metrics dict from the scraper.
         raw_model_response: The raw string response from Gemini before parsing.
+        grounding_check: Optional grounding verification result from grounding.py.
     """
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -58,6 +48,9 @@ def log(
         "extracted_metrics": extracted_metrics,
         "raw_model_response": raw_model_response,
     }
+
+    if grounding_check is not None:
+        entry["grounding_check"] = grounding_check
 
     # Read existing log entries (or start with empty list)
     entries = []
