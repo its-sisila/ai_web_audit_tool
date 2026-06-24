@@ -28,7 +28,9 @@ class ScrapeMetrics(TypedDict):
     image_count: int
     images_missing_alt_pct: float
     meta_title: str | None
+    meta_title_length: int
     meta_description: str | None
+    meta_description_length: int
     response_time_ms: int
 
 
@@ -225,7 +227,9 @@ def _extract_meta(soup: BeautifulSoup) -> dict:
 
     return {
         "meta_title": meta_title,
+        "meta_title_length": len(meta_title) if meta_title else 0,
         "meta_description": meta_description,
+        "meta_description_length": len(meta_description) if meta_description else 0,
     }
 
 

@@ -33,10 +33,10 @@ class GroundingResult(TypedDict):
 # Each insight is expected to cite at least one of its mapped metrics.
 INSIGHT_METRIC_MAP = {
     "seo_structure": [
-        "h1_count", "h2_count", "h3_count", "meta_title", "meta_description",
+        "h1_count", "h2_count", "h3_count", "meta_title", "meta_title_length", "meta_description", "meta_description_length",
     ],
     "messaging_clarity": [
-        "meta_title", "meta_description", "word_count",
+        "meta_title", "meta_title_length", "meta_description", "meta_description_length", "word_count",
     ],
     "cta_usage": [
         "cta_count", "word_count",
