@@ -8,6 +8,26 @@ string matching that validates the AI did its job.
 This module is fully independent — no AI imports, no scraper imports.
 """
 
+from typing import TypedDict
+
+
+# ---------- Type Definitions ----------
+
+class InsightGrounding(TypedDict):
+    """Grounding result for a single insight."""
+    grounded: bool
+    cited_metrics: list[str]
+
+
+class GroundingResult(TypedDict):
+    """Full grounding verification result."""
+    seo_structure: InsightGrounding
+    messaging_clarity: InsightGrounding
+    cta_usage: InsightGrounding
+    content_depth: InsightGrounding
+    ux_structural_concerns: InsightGrounding
+    overall_grounded_pct: float
+
 
 # Maps insight keys to the metric keys they should reference.
 # Each insight is expected to cite at least one of its mapped metrics.
@@ -30,7 +50,7 @@ INSIGHT_METRIC_MAP = {
 }
 
 
-def verify_grounding(insights: dict, metrics: dict) -> dict:
+def verify_grounding(insights: dict, metrics: dict) -> GroundingResult:
     """
     For each insight, check if the text contains at least one
     of the expected metric values as a literal string.

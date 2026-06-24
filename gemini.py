@@ -9,9 +9,62 @@ No scraper imports exist in this file.
 
 import json
 import os
+from typing import TypedDict
 
 from google import genai
 from google.genai import types
+
+
+# ---------- Type Definitions ----------
+
+class ScoreBreakdown(TypedDict):
+    """Per-pillar scores from the AI."""
+    seo_structure: int
+    messaging_clarity: int
+    cta_usage: int
+    content_depth: int
+    ux_structural_concerns: int
+
+
+class Recommendation(TypedDict):
+    """A single prioritized recommendation."""
+    priority: str  # "High" | "Medium" | "Low"
+    recommendation: str
+    reasoning: str
+
+
+class AIInsights(TypedDict):
+    """Structured insights from the AI across 5 pillars."""
+    seo_structure: str
+    messaging_clarity: str
+    cta_usage: str
+    content_depth: str
+    ux_structural_concerns: str
+
+
+class AIResult(TypedDict):
+    """Parsed AI response."""
+    overall_score: int
+    score_breakdown: ScoreBreakdown
+    competitive_context: str
+    insights: AIInsights
+    recommendations: list[Recommendation]
+
+
+class GeminiConfig(TypedDict):
+    """Config metadata for logging."""
+    model: str
+    max_output_tokens: int
+    response_mime_type: str
+
+
+class AnalyzeResult(TypedDict):
+    """Return type for the analyze() function."""
+    ai_result: AIResult
+    raw_output: str
+    system_prompt: str
+    user_prompt: str
+    gemini_config: GeminiConfig
 
 
 # Exact system prompt from the build guide, enhanced with industry benchmarks
@@ -181,7 +234,7 @@ def _call_gemini(client, model_name: str, user_prompt: str) -> str:
     return response.text
 
 
-def analyze(url: str, metrics: dict, cleaned_text: str) -> dict:
+def analyze(url: str, metrics: dict, cleaned_text: str) -> AnalyzeResult:
     """
     Main entry point. Sends extracted metrics and cleaned text to Gemini
     for structured AI analysis.

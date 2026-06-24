@@ -7,10 +7,34 @@ No Gemini or AI imports exist in this file.
 """
 
 import re
+from typing import TypedDict
 from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup, Comment
+
+
+# ---------- Type Definitions ----------
+
+class ScrapeMetrics(TypedDict):
+    """Structured metrics extracted from a webpage."""
+    word_count: int
+    h1_count: int
+    h2_count: int
+    h3_count: int
+    cta_count: int
+    internal_links: int
+    external_links: int
+    image_count: int
+    images_missing_alt_pct: float
+    meta_title: str | None
+    meta_description: str | None
+
+
+class ScrapeResult(TypedDict):
+    """Return type for the scrape() function."""
+    metrics: ScrapeMetrics
+    cleaned_text: str
 
 
 # Common CTA phrases used to identify call-to-action elements
@@ -203,7 +227,7 @@ def _extract_meta(soup: BeautifulSoup) -> dict:
     }
 
 
-def scrape(url: str) -> dict:
+def scrape(url: str) -> ScrapeResult:
     """
     Main entry point. Accepts a URL, fetches the page, and extracts
     all factual metrics plus cleaned body text.
