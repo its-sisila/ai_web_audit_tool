@@ -458,6 +458,120 @@ body {
     }
 }
 
+/* ---------- Score Section ---------- */
+.score-section {
+    margin-bottom: 40px;
+}
+
+.score-overview {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 24px;
+}
+
+/* -- Score Ring -- */
+.score-ring-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+.score-ring {
+    width: 140px;
+    height: 140px;
+    transform: rotate(-90deg);
+}
+
+.score-ring__bg {
+    fill: none;
+    stroke: var(--border-subtle);
+    stroke-width: 8;
+}
+
+.score-ring__fill {
+    fill: none;
+    stroke: #6366f1;
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.score-ring__value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.score-ring__label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 60%);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* -- Score Breakdown Bars -- */
+.score-breakdown {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.breakdown-row__label {
+    width: 140px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.breakdown-row__bar-bg {
+    flex: 1;
+    height: 8px;
+    background: var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.breakdown-row__bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+.breakdown-row__value {
+    width: 32px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* -- Competitive Context Callout -- */
+.competitive-callout {
+    display: none;
+    padding: 16px 20px;
+    background: rgba(99, 102, 241, 0.08);
+    border-left: 3px solid #6366f1;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    font-style: italic;
+}
+
 /* ---------- Section Headers ---------- */
 .section-header {
     display: flex;
@@ -612,6 +726,56 @@ body {
     font-size: 0.92rem;
     color: var(--text-secondary);
     line-height: 1.7;
+}
+
+/* -- Grounding Indicators -- */
+.insight-block__title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.grounding-indicator {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.grounding-indicator--pass {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+
+.grounding-indicator--fail {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.grounding-badge {
+    margin-left: auto;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.grounding-badge--good {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.grounding-badge--warn {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.grounding-badge--poor {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
 }
 
 /* ---------- Recommendations Section ---------- */
@@ -784,6 +948,16 @@ body {
     .recommendation-card {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .score-overview {
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .breakdown-row__label {
+        width: 110px;
     }
 }
 

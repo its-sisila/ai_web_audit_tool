@@ -14,19 +14,60 @@ from google import genai
 from google.genai import types
 
 
-# Exact system prompt from the build guide
+# Exact system prompt from the build guide, enhanced with industry benchmarks
 SYSTEM_PROMPT = (
     "You are a senior web strategist and SEO analyst. You will be given factual metrics "
     "extracted from a single webpage and its cleaned text content. Your job is to generate "
     "specific, grounded insights and prioritized recommendations. Every insight must directly "
     "reference the provided metrics by their exact values — never give generic advice. "
-    "Be concise, direct, and actionable."
+    "Be concise, direct, and actionable.\n\n"
+    "Use these industry benchmarks for comparison:\n"
+    "- Word count: High-performing marketing pages have 800–2000 words\n"
+    "- Heading structure: 1 H1 (mandatory), 3–8 H2s, H3s as needed\n"
+    "- CTA density: 2–5 CTAs per 1000 words is optimal\n"
+    "- Image alt text: ≥ 95% coverage is the accessibility standard\n"
+    "- Meta description: 120–160 characters for optimal SERP display\n"
+    "- Internal links: 3–5 per 1000 words for good site navigation\n"
+    "When referencing benchmarks, explicitly state the comparison "
+    "(e.g., '555 words is 31% below the 800-word minimum for marketing pages').\n\n"
+    "Assign an overall_score (0–100) and per-pillar scores in score_breakdown. "
+    "A score of 80+ means strong performance; 50–79 means needs improvement; below 50 is poor. "
+    "Base scores on the benchmarks provided and the extracted metrics."
 )
 
-# Response schema for structured output enforcement (from build guide Section 5)
+# Response schema for structured output enforcement (from build guide Section 5),
+# enhanced with scoring and competitive context fields.
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
+        "overall_score": {
+            "type": "integer",
+            "description": "Overall page quality score from 0–100 based on all metrics and analysis.",
+        },
+        "score_breakdown": {
+            "type": "object",
+            "properties": {
+                "seo_structure": {"type": "integer"},
+                "messaging_clarity": {"type": "integer"},
+                "cta_usage": {"type": "integer"},
+                "content_depth": {"type": "integer"},
+                "ux_structural_concerns": {"type": "integer"},
+            },
+            "required": [
+                "seo_structure",
+                "messaging_clarity",
+                "cta_usage",
+                "content_depth",
+                "ux_structural_concerns",
+            ],
+        },
+        "competitive_context": {
+            "type": "string",
+            "description": (
+                "1-2 sentence summary comparing this page to typical "
+                "high-performing marketing sites in its apparent industry."
+            ),
+        },
         "insights": {
             "type": "object",
             "properties": {
@@ -62,7 +103,13 @@ RESPONSE_SCHEMA = {
             "maxItems": 5,
         },
     },
-    "required": ["insights", "recommendations"],
+    "required": [
+        "overall_score",
+        "score_breakdown",
+        "competitive_context",
+        "insights",
+        "recommendations",
+    ],
 }
 
 # Model fallback chain — tried in order; first available model wins.
@@ -70,9 +117,10 @@ RESPONSE_SCHEMA = {
 # Only the successful call consumes free tier quota.
 MODEL_CHAIN = [
     "gemini-3.5-flash",       # Primary — specified in the build guide
-    "gemini-2.5-flash",       # Fallback 1 — stable, widely available
-    "gemini-2.5-flash-lite",  # Fallback 2 — lighter variant
-    "gemini-3.1-flash-lite",  # Fallback 3 — newer lite model
+    "gemini-3.1-flash-lite",  # Fallback 1 — newer lite model
+    "gemini-2.5-flash",       # Fallback 2 — stable, widely available
+    "gemini-2.5-flash-lite",  # Fallback 3 — lighter variant
+
 ]
 MAX_OUTPUT_TOKENS = 8192
 MAX_CLEANED_TEXT_WORDS = 3000
