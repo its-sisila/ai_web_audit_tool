@@ -4,3 +4,4 @@ beautifulsoup4
 google-genai
 python-dotenv
 pytest
+supabase
