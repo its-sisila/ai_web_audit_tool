@@ -8,29 +8,29 @@
 
 /* ---------- CSS Custom Properties ---------- */
 :root {
-    /* Colors — Dark Mode Palette */
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #111827;
-    --bg-card: #1a2035;
-    --bg-card-hover: #1f2847;
-    --bg-input: #0f1629;
-    --bg-code: #0d1117;
+    /* Colors — Light Mode Palette */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: rgba(255, 255, 255, 0.65);
+    --bg-card-hover: rgba(255, 255, 255, 0.85);
+    --bg-input: rgba(255, 255, 255, 0.6);
+    --bg-code: #f1f5f9;
 
     /* Borders */
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-input: rgba(255, 255, 255, 0.1);
-    --border-focus: #6366f1;
+    --border-subtle: rgba(255, 255, 255, 0.5);
+    --border-input: rgba(255, 255, 255, 0.6);
+    --border-focus: #3b82f6;
 
     /* Text */
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
     --text-muted: #64748b;
-    --text-accent: #818cf8;
+    --text-accent: #2563eb;
 
     /* Accent Gradient */
-    --gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
-    --gradient-bg: linear-gradient(180deg, #0a0e1a 0%, #111827 100%);
-    --gradient-card: linear-gradient(145deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%);
+    --gradient-accent: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+    --gradient-bg: linear-gradient(180deg, #e0e7ff 0%, #ffffff 100%);
+    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 100%);
 
     /* Priority Colors */
     --priority-high: #ef4444;
@@ -52,9 +52,9 @@
     --radius-xl: 20px;
 
     /* Shadows */
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-subtle);
-    --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
-    --shadow-input: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-card: 0 8px 32px rgba(31, 38, 135, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.6);
+    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.4);
+    --shadow-input: 0 2px 8px rgba(31, 38, 135, 0.05);
 
     /* Transitions */
     --transition-fast: 150ms ease;
@@ -125,7 +125,7 @@ body {
     letter-spacing: -0.03em;
     line-height: 1.15;
     margin-bottom: 12px;
-    background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -146,6 +146,8 @@ body {
     padding: 32px;
     margin-bottom: 40px;
     box-shadow: var(--shadow-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .input-group {
@@ -165,6 +167,8 @@ body {
     font-size: 0.95rem;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow: var(--shadow-input);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .input-group__field::placeholder {
@@ -215,6 +219,39 @@ body {
     height: 18px;
 }
 
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--text-accent);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.btn-secondary:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--text-accent);
+    transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary svg {
+    width: 16px;
+    height: 16px;
+}
+
 /* ---------- Audit History ---------- */
 .audit-history {
     margin-top: 24px;
@@ -222,8 +259,10 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-card);
     animation: fadeSlideIn 0.3s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .audit-history__title {
@@ -255,6 +294,8 @@ body {
     font-size: 0.85rem;
     color: var(--text-primary);
     transition: all var(--transition-fast);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .history-item:hover {
@@ -549,7 +590,7 @@ body {
 
 .score-ring__fill {
     fill: none;
-    stroke: #6366f1;
+    stroke: #3b82f6;
     stroke-width: 8;
     stroke-linecap: round;
 }
@@ -620,8 +661,8 @@ body {
 .competitive-callout {
     display: none;
     padding: 16px 20px;
-    background: rgba(99, 102, 241, 0.08);
-    border-left: 3px solid #6366f1;
+    background: rgba(59, 130, 246, 0.08);
+    border-left: 3px solid #3b82f6;
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     color: var(--text-secondary);
     font-size: 0.9rem;
@@ -688,6 +729,9 @@ body {
     padding: 20px;
     transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
     background-image: var(--gradient-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-card);
 }
 
 .metric-card:hover {
@@ -753,6 +797,9 @@ body {
     padding: 24px;
     background-image: var(--gradient-card);
     transition: border-color var(--transition-fast);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-card);
 }
 
 .insight-block:hover {
@@ -856,6 +903,9 @@ body {
     align-items: flex-start;
     background-image: var(--gradient-card);
     transition: border-color var(--transition-fast), transform var(--transition-fast);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-card);
 }
 
 .recommendation-card:hover {
