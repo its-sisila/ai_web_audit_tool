@@ -1071,6 +1071,7 @@ body {
 @media (max-width: 400px) {
     .metrics-grid {
         grid-template-columns: 1fr;
+    }
 }
 
 /* ---------- Print Styles ---------- */
