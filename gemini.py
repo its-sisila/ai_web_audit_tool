@@ -198,6 +198,7 @@ def _build_user_prompt(url: str, metrics: dict, cleaned_text: str) -> str:
         f"Here are the extracted metrics from {url}:\n"
         f"\n"
         f"- Word Count: {metrics['word_count']}\n"
+        f"- Server Response Time: {metrics['response_time_ms']}ms\n"
         f"- H1 Tags: {metrics['h1_count']}\n"
         f"- H2 Tags: {metrics['h2_count']}\n"
         f"- H3 Tags: {metrics['h3_count']}\n"
