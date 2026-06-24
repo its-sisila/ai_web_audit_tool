@@ -54,7 +54,10 @@
         </div>
 
         <!-- ===== Error Message ===== -->
-        <div class="error-message" id="error-message"></div>
+        <div class="error-message" id="error-message">
+            <span id="error-text"></span><br>
+            <button class="btn" id="error-retry-btn" style="margin-top: 12px; padding: 6px 12px; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius-sm); cursor: pointer;">Try Again</button>
+        </div>
 
         <!-- ===== Loading State ===== -->
         <div class="loading" id="loading">
@@ -278,7 +281,7 @@
             }
 
             function showError(message) {
-                errorEl.textContent = message;
+                document.getElementById('error-text').textContent = message;
                 errorEl.classList.add('active');
                 hideLoading();
                 resultsEl.classList.remove('active');
@@ -598,6 +601,11 @@
             // ===== Print Report =====
             document.getElementById('print-btn').addEventListener('click', function () {
                 window.print();
+            });
+
+            // ===== Error Retry =====
+            document.getElementById('error-retry-btn').addEventListener('click', function () {
+                auditForm.dispatchEvent(new Event('submit'));
             });
 
             // ===== Audit History =====

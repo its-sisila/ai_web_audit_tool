@@ -8,6 +8,7 @@ Routes:
 """
 
 import os
+import requests
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -77,6 +78,15 @@ def audit():
         scrape_result = scrape(url)
         metrics = scrape_result["metrics"]
         cleaned_text = scrape_result["cleaned_text"]
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "The website took too long to respond (>10s). Try a different URL."}), 504
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response is not None else 500
+        if status in (401, 403):
+            return jsonify({"error": "This website blocked our request. It may require authentication."}), status
+        return jsonify({"error": f"Website returned an error ({status}). Try a different URL."}), status
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "Could not reach this website. Please check the URL and try again."}), 502
     except Exception as e:
         return jsonify({"error": f"Scraping failed: {str(e)}"}), 500
 
@@ -88,6 +98,8 @@ def audit():
         system_prompt = gemini_result["system_prompt"]
         user_prompt = gemini_result["user_prompt"]
         gemini_config = gemini_result["gemini_config"]
+    except EnvironmentError:
+        return jsonify({"error": "API key not configured. See setup instructions in README."}), 500
     except Exception as e:
         return jsonify({"error": f"AI analysis failed: {str(e)}"}), 500
 
