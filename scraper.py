@@ -28,7 +28,10 @@ class ScrapeMetrics(TypedDict):
     image_count: int
     images_missing_alt_pct: float
     meta_title: str | None
+    meta_title_length: int
     meta_description: str | None
+    meta_description_length: int
+    response_time_ms: int
 
 
 class ScrapeResult(TypedDict):
@@ -75,15 +78,16 @@ _USER_AGENT = (
 )
 
 
-def _fetch_html(url: str) -> str:
-    """Fetch raw HTML from the given URL."""
+def _fetch_html(url: str) -> tuple[str, int]:
+    """Fetch raw HTML from the given URL and return (html, elapsed_ms)."""
     response = requests.get(
         url,
         headers={"User-Agent": _USER_AGENT},
         timeout=10,
     )
     response.raise_for_status()
-    return response.text
+    elapsed_ms = int(response.elapsed.total_seconds() * 1000)
+    return response.text, elapsed_ms
 
 
 def _clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
@@ -223,7 +227,9 @@ def _extract_meta(soup: BeautifulSoup) -> dict:
 
     return {
         "meta_title": meta_title,
+        "meta_title_length": len(meta_title) if meta_title else 0,
         "meta_description": meta_description,
+        "meta_description_length": len(meta_description) if meta_description else 0,
     }
 
 
@@ -267,7 +273,7 @@ def scrape(url: str) -> ScrapeResult:
     base_domain = parsed_url.netloc.lower().replace("www.", "")
 
     # Fetch and parse HTML
-    html = _fetch_html(url)
+    html, elapsed_ms = _fetch_html(url)
     soup = BeautifulSoup(html, "html.parser")
 
     # Clean the soup BEFORE any extraction
@@ -284,6 +290,7 @@ def scrape(url: str) -> ScrapeResult:
         **_count_links(soup, base_domain),
         **_analyze_images(soup),
         **_extract_meta(soup),
+        "response_time_ms": elapsed_ms,
     }
 
     return {

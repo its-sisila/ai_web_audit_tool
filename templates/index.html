@@ -226,6 +226,7 @@
             // ===== Metric Labels =====
             const METRIC_CONFIG = [
                 { key: 'word_count', label: 'Word Count', type: 'number' },
+                { key: 'response_time_ms', label: 'Response Time (ms)', type: 'number' },
                 { key: 'h1_count', label: 'H1 Tags', type: 'number' },
                 { key: 'h2_count', label: 'H2 Tags', type: 'number' },
                 { key: 'h3_count', label: 'H3 Tags', type: 'number' },
@@ -566,6 +567,11 @@
                             logPre.textContent = 'Failed to load prompt log: ' + err.message;
                         });
                 }
+            });
+
+            // ===== Print Report =====
+            document.getElementById('print-btn').addEventListener('click', function () {
+                window.print();
             });
 
         })();

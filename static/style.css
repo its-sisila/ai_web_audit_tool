@@ -964,5 +964,48 @@ body {
 @media (max-width: 400px) {
     .metrics-grid {
         grid-template-columns: 1fr;
+}
+
+/* ---------- Print Styles ---------- */
+@media print {
+    body {
+        background: #fff;
+        color: #000;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    header, .audit-form, .prompt-log-section, #print-btn, .loading, .error {
+        display: none !important;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .score-section, .metrics-section, .insights-section, .recommendations-section {
+        page-break-inside: avoid;
+        margin-bottom: 30px;
+        break-inside: avoid;
+    }
+
+    .score-ring__bg {
+        stroke: #eee;
+    }
+
+    .metric-card, .insight-block, .recommendation-card {
+        background: #fafafa;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+    }
+
+    .section-header__title, .metric-card__value, .insight-block__title, .recommendation-card__title {
+        color: #000;
+    }
+
+    .metric-card__label, .insight-block__content, .recommendation-card__desc {
+        color: #333;
     }
 }
