@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="AI-Powered Website Audit Tool — Analyze any webpage for SEO, content quality, and UX insights using Gemini AI.">
+        content="AI-Powered Website Audit Tool — Analyze any webpage for SEO, content quality, and UX insights using AI.">
     <title>Website Audit Tool — AI-Powered Analysis</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -22,9 +22,9 @@
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
                 </svg>
-                AI-Powered Audit
+                EIGHT25 MEDIA
             </div>
-            <h1 class="header__title">Website Audit Tool</h1>
+            <h1 class="header__title">AI-Powered Website Audit Tool</h1>
             <p class="header__subtitle">Enter a URL to extract factual metrics and generate AI-driven insights for SEO,
                 content, and UX.</p>
         </header>
@@ -45,8 +45,19 @@
             </form>
         </section>
 
+        <!-- ===== Audit History ===== -->
+        <div class="audit-history" id="audit-history" style="display: none;">
+            <div class="audit-history__title">Recent Audits</div>
+            <div class="audit-history__list" id="audit-history-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
         <!-- ===== Error Message ===== -->
-        <div class="error-message" id="error-message"></div>
+        <div class="error-message" id="error-message">
+            <span id="error-text"></span><br>
+            <button class="btn" id="error-retry-btn" style="margin-top: 12px; padding: 6px 12px; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius-sm); cursor: pointer;">Try Again</button>
+        </div>
 
         <!-- ===== Loading State ===== -->
         <div class="loading" id="loading">
@@ -85,16 +96,32 @@
 
             <!-- Section 0: Score Overview -->
             <section class="score-section" id="score-section">
-                <div class="section-header">
-                    <div class="section-header__icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+                <div class="section-header" style="justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; gap: 16px;">
+                        <div class="section-header__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20V10" />
+                                <path d="M18 20V4" />
+                                <path d="M6 20v-4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="section-header__label">AI-Powered Score</p>
+                            <h2 class="section-header__title">Audit Score</h2>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="print-btn" type="button"
+                        style="padding: 8px 16px; font-size: 0.9rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="margin-right: 6px; vertical-align: text-bottom;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                    </div>
-                    <div>
-                        <p class="section-header__label">AI-Powered Score</p>
-                        <h2 class="section-header__title">Audit Score</h2>
-                    </div>
+                        Download PDF
+                    </button>
                 </div>
                 <div class="score-overview">
                     <div class="score-ring-wrapper">
@@ -144,7 +171,7 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="section-header__label">Gemini AI Analysis</p>
+                        <p class="section-header__label">AI Analysis of Metrics </p>
                         <h2 class="section-header__title">AI Insights</h2>
                     </div>
                 </div>
@@ -213,6 +240,8 @@
             const scoreValue = document.getElementById('score-value');
             const scoreBreakdown = document.getElementById('score-breakdown');
             const competitiveCallout = document.getElementById('competitive-callout');
+            const historyContainer = document.getElementById('audit-history');
+            const historyList = document.getElementById('audit-history-list');
 
             // ===== Insight Labels =====
             const INSIGHT_LABELS = {
@@ -252,7 +281,7 @@
             }
 
             function showError(message) {
-                errorEl.textContent = message;
+                document.getElementById('error-text').textContent = message;
                 errorEl.classList.add('active');
                 hideLoading();
                 resultsEl.classList.remove('active');
@@ -490,7 +519,7 @@
 
                 // Simulate the two-phase loading text transition
                 var loadingPhase2Timer = setTimeout(function () {
-                    loadingText.textContent = 'Analyzing with Gemini AI...';
+                    loadingText.textContent = 'Analyzing metrics...';
                 }, 3000);
 
                 fetch('/audit', {
@@ -573,6 +602,68 @@
             document.getElementById('print-btn').addEventListener('click', function () {
                 window.print();
             });
+
+            // ===== Error Retry =====
+            document.getElementById('error-retry-btn').addEventListener('click', function () {
+                auditForm.dispatchEvent(new Event('submit'));
+            });
+
+            // ===== Audit History =====
+            function loadHistory() {
+                fetch('/history')
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        if (!data || data.length === 0) return;
+
+                        historyContainer.style.display = 'block';
+                        historyList.innerHTML = '';
+
+                        data.forEach(function (item) {
+                            if (item.overall_score == null) return;
+
+                            const btn = document.createElement('div');
+                            btn.className = 'history-item';
+
+                            // Parse relative time
+                            const date = new Date(item.timestamp);
+                            const now = new Date();
+                            const diffMin = Math.round((now - date) / 60000);
+                            let timeStr = diffMin < 60 ? diffMin + 'm ago' :
+                                Math.round(diffMin / 60) < 24 ? Math.round(diffMin / 60) + 'h ago' :
+                                    Math.round(diffMin / 1440) + 'd ago';
+
+                            let domain = item.url;
+                            try {
+                                const urlObj = new URL(item.url);
+                                domain = urlObj.hostname.replace('www.', '');
+                            } catch (e) { }
+
+                            const color = getScoreColor(item.overall_score);
+
+                            btn.innerHTML =
+                                '<span class="history-item__score" style="color:' + color + '">' + item.overall_score + '</span>' +
+                                '<span>' + escapeHtml(domain) + '</span>' +
+                                '<span class="history-item__time">' + timeStr + '</span>';
+
+                            btn.addEventListener('click', function () {
+                                urlInput.value = item.url;
+                                renderScore(item.overall_score, item.score_breakdown);
+                                renderCompetitiveContext(item.competitive_context);
+                                renderMetrics(item.metrics);
+                                renderInsights(item.insights, item.grounding_check);
+                                renderRecommendations(item.recommendations);
+                                resultsEl.classList.add('active');
+                                document.getElementById('score-section').scrollIntoView({ behavior: 'smooth' });
+                            });
+
+                            historyList.appendChild(btn);
+                        });
+                    })
+                    .catch(console.error);
+            }
+
+            // Initial load
+            loadHistory();
 
         })();
     </script>
