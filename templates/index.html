@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
         content="AI-Powered Website Audit Tool — Analyze any webpage for SEO, content quality, and UX insights using AI.">
-    <title>Website Audit Tool — AI-Powered Analysis</title>
+    <title>Website Audit Tool</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -33,7 +33,7 @@
         <section class="input-section" id="input-section">
             <form class="input-group" id="audit-form">
                 <input type="text" class="input-group__field" id="url-input"
-                    placeholder="Enter a URL — e.g. https://example.com" autocomplete="url" required>
+                    placeholder="Enter a URL - e.g. https://example.com" autocomplete="url" required>
                 <button type="submit" class="btn-primary" id="audit-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -56,7 +56,9 @@
         <!-- ===== Error Message ===== -->
         <div class="error-message" id="error-message">
             <span id="error-text"></span><br>
-            <button class="btn" id="error-retry-btn" style="margin-top: 12px; padding: 6px 12px; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius-sm); cursor: pointer;">Try Again</button>
+            <button class="btn" id="error-retry-btn"
+                style="margin-top: 12px; padding: 6px 12px; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius-sm); cursor: pointer;">Try
+                Again</button>
         </div>
 
         <!-- ===== Loading State ===== -->
