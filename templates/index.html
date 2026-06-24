@@ -415,18 +415,16 @@
                     // Grounding indicator
                     if (groundingCheck && groundingCheck[key]) {
                         var check = groundingCheck[key];
-                        var icon = document.createElement('span');
-                        icon.className = 'grounding-icon';
+                        var indicator = document.createElement('span');
+                        indicator.className = 'grounding-indicator';
                         if (check.grounded) {
-                            icon.classList.add('grounding-icon--pass');
-                            icon.textContent = '✅';
-                            icon.title = 'Grounded — cites: ' + check.cited_metrics.join(', ');
+                            indicator.classList.add('grounding-indicator--pass');
+                            indicator.textContent = 'Source Data: ' + check.cited_metrics.join(', ');
                         } else {
-                            icon.classList.add('grounding-icon--fail');
-                            icon.textContent = '⚠️';
-                            icon.title = 'Warning: This insight may not reference specific metrics';
+                            indicator.classList.add('grounding-indicator--fail');
+                            indicator.textContent = 'Warning: No metric cited';
                         }
-                        titleRow.appendChild(icon);
+                        titleRow.appendChild(indicator);
                     }
 
                     const content = document.createElement('div');
