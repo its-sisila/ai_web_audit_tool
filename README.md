@@ -30,9 +30,9 @@
           ┌──────────────────┐                  │   │
           │   logger.py      │                  │   │
           │                  │                  │   │
-          │  Appends full    │                  │   │
+          │  Saves full      │                  │   │
           │  prompt log to   │                  │   │
-          │  prompt_log.json │                  │   │
+          │  Supabase DB     │                  │   │
           └──────────────────┘                  │   │
                                                 │   │
                     ┌───────────────────────────┘   │
@@ -56,7 +56,7 @@
 ```
 
 **Data flow:**  
-`URL input → scraper.py (HTML fetch + metric extraction) → gemini.py (AI analysis with structured schema) → logger.py (prompt log) → JSON response → rendered UI`
+`URL input → scraper.py (HTML fetch + metric extraction) → gemini.py (AI analysis with structured schema) → logger.py (prompt log to Supabase) → JSON response → rendered UI`
 
 The scraper and AI modules are **fully independent** — no cross-imports. This enforces clean separation between factual data and AI-generated content.
 
@@ -135,7 +135,7 @@ To run the test suite: `python -m pytest tests/ -v`
 | **CTA Detection** | Regex pattern matching | ML-based intent classification | Regex is fast and deterministic; covers 90%+ of standard marketing CTAs. ML would add complexity and a dependency for marginal gain |
 | **Token limit** | 8192 output tokens | 1500 limit | Increased to 8192 to prevent JSON truncation issues when fallback models (like `gemini-2.5-flash`) use internal reasoning tokens that count against the output limit. |
 | **Text truncation** | 3000 words | Full page text | Balances content coverage with token efficiency. Most marketing pages have < 3000 words of meaningful content |
-| **Prompt logging** | Local JSON file | Database | File-based logging is zero-dependency and sufficient for a single-user tool. Database would be overkill |
+| **Prompt logging** | Supabase PostgreSQL | Local JSON file | Shifted to a cloud database to enable Serverless deployment on Vercel, avoiding read-only filesystem restrictions. |
 
 ### Known Limitations
 
@@ -216,9 +216,10 @@ source venv/bin/activate
 # 4. Install dependencies
 pip install -r requirements.txt
 
-# 5. Configure your API key
+# 5. Configure your API key and Supabase credentials
 cp .env.example .env
 # Then edit .env and replace 'your_key_here' with your actual Gemini API key
+# Also add your SUPABASE_URL and SUPABASE_KEY from your Supabase project
 
 # 6. Run the application
 py app.py
@@ -248,3 +249,33 @@ py app.py
 - **`GEMINI_API_KEY not found`** — Make sure your `.env` file exists in the project root with `GEMINI_API_KEY=your_key`
 - **Empty scrape results** — The target site may be JavaScript-rendered (SPA). Try a static HTML site instead
 - **Gemini API errors** — Check your API key is valid and has quota remaining
+- **History not saving** — Check that your `SUPABASE_URL` and `SUPABASE_KEY` are correct and the `prompt_logs` table exists in your Supabase database
+
+---
+
+## 8. Deployment (Vercel)
+
+This application is configured for seamless deployment on **Vercel** as a Python Serverless Function.
+
+1. Create a project in [Supabase](https://supabase.com/) and run the following SQL to set up the prompt log table:
+
+   ```sql
+   create table prompt_logs (
+     id uuid default gen_random_uuid() primary key,
+     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+     url text not null,
+     system_prompt text not null,
+     user_prompt text not null,
+     gemini_config jsonb not null,
+     extracted_metrics jsonb not null,
+     raw_model_response text not null,
+     grounding_check jsonb
+   );
+   ```
+
+2. Import your GitHub repository into Vercel.
+3. In your Vercel Project Settings > Environment Variables, add:
+   - `GEMINI_API_KEY`
+   - `SUPABASE_URL`
+   - `SUPABASE_KEY`
+4. Deploy! Vercel uses the `vercel.json` file in this repository to automatically build and route your Flask application as a Serverless Function.
